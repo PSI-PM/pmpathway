@@ -4337,15 +4337,19 @@ async function redeemPromoCode() {
   btn.textContent = 'Checking…'; btn.disabled = true;
   
   try {
-    const resp = await fetch('https://ihpcnampwmqbddvifych.supabase.co/functions/v1/validate-promo-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, userId: user?.id, email: user?.email })
+    const { data: result, error: invErr } = await SB.functions.invoke('validate-promo-code', {
+      body: { code, userId: user?.id, email: user?.email }
     });
-    const result = await resp.json();
+    if (invErr) {
+      let em = invErr.message || 'Could not reach the server. Please try again.';
+      try { const b = await invErr.context?.json?.(); if (b?.error) em = b.error; } catch(_) {}
+      showPromoMsg(em, false);
+      btn.textContent = 'Redeem'; btn.disabled = false;
+      return;
+    }
     
-    if (!resp.ok || result.error) {
-      showPromoMsg(result.error || 'Invalid promo code.', false);
+    if (!result || result.error) {
+      showPromoMsg((result && result.error) || 'Invalid promo code.', false);
       btn.textContent = 'Redeem'; btn.disabled = false;
       return;
     }

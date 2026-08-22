@@ -1042,6 +1042,414 @@ button,[role=button]{min-height:24px;}
         <div id="game-panel-ep_drag" class="game-panel" style="display:none"></div>
         <div id="game-panel-ep_hot" class="game-panel" style="display:none"></div>
         <div id="game-panel-ep_sponsor" class="game-panel" style="display:none"></div>
+<div id="game-panel-cpm" class="game-panel" style="display:none"></div>
+<script type="text/html" id="cpm-src">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network Diagram Trainer — PMPathway</title>
+<style>
+  :root{
+    --bg2:#040d1c; --panel:rgba(0,60,160,0.08); --line:rgba(0,140,255,0.2);
+    --blue:#00aaff; --blue2:#0070e0; --gold:#ffd700; --green:#00e676; --red:#ff4455;
+    --text:#dceaf7; --muted:#6b8eb0; --node:#0a1830;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(circle at 50% -10%,#0a1c38,var(--bg2) 70%);color:var(--text);
+    font-family:"Source Sans 3",system-ui,Arial,sans-serif;min-height:100vh;padding:20px;-webkit-text-size-adjust:100%;}
+  h1{font-family:"Playfair Display",Georgia,serif;font-size:26px;margin:0 0 2px;color:#fff}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .card{background:var(--panel);border:0.5px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .pbtn{padding:9px 14px;border-radius:9px;border:0.5px solid var(--line);background:rgba(0,40,110,.3);
+    color:#9cc4e6;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .pbtn .pn{color:#5a8aaa;margin-right:6px}
+  .pbtn.on{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;border-color:transparent}
+  .pbtn.on .pn{color:#cde9ff}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .step{flex:1;min-width:90px;text-align:center;font-size:11px;padding:9px 4px;border-radius:8px;border:0.5px solid var(--line);
+    background:rgba(0,40,110,0.25);color:var(--muted)}
+  .step.active{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;border-color:transparent;font-weight:700}
+  .step.done{color:var(--green);border-color:rgba(0,200,120,0.4)}
+  .step .n{display:block;font-size:15px;font-weight:800}
+  h2{font-size:17px;margin:0 0 4px;color:#eaf4ff}
+  .hint{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.6}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;text-align:left;border-bottom:0.5px solid rgba(0,140,255,0.12)}
+  th{color:var(--blue);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  td .aid{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:6px;
+    background:rgba(0,140,255,0.15);color:#8fd0ff;font-weight:800;font-size:12px;margin-right:2px}
+  td .aid.ms{background:rgba(255,215,0,.15);color:var(--gold)}
+  tr.msrow td{color:var(--gold);font-weight:700}
+  .btn{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;border:none;font-weight:700;font-size:14px;
+    padding:12px 26px;border-radius:9px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(0,140,255,.35)}
+  .btn.ghost{background:transparent;border:0.5px solid var(--line);color:#9cc4e6;box-shadow:none}
+  .btn.gold{background:linear-gradient(135deg,#c9a300,var(--gold));color:#231a00}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+  .msg{font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;margin-top:14px;display:none}
+  .msg.ok{display:block;background:rgba(0,200,120,.12);border:0.5px solid rgba(0,200,120,.4);color:var(--green)}
+  .msg.bad{display:block;background:rgba(255,68,85,.1);border:0.5px solid rgba(255,68,85,.4);color:#ff8a96}
+
+  .tray{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px;min-height:40px}
+  .chip{padding:9px 13px;border-radius:9px;background:rgba(0,140,255,.12);border:0.5px solid rgba(0,140,255,.35);
+    color:#bfe4ff;font-weight:700;font-size:13px;cursor:grab;user-select:none;touch-action:none}
+  .chip b{color:#fff;margin-right:6px}
+  .chip.sel{background:var(--gold);color:#231a00;border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,215,0,.25)}
+  .chip.sel b{color:#231a00}
+  .chip.placed{opacity:.3;pointer-events:none}
+
+  .diagram-scroll{overflow-x:auto;padding-bottom:8px}
+  .diagram{position:relative;display:flex;gap:48px;padding:10px 6px;min-width:min-content}
+  .dcol{display:flex;flex-direction:column;gap:24px;justify-content:center;z-index:2}
+  svg.links{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+  .node{width:134px;background:var(--node);border:1px solid rgba(0,140,255,.35);border-radius:8px;overflow:hidden;
+    box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .node.crit{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,215,0,.4),0 4px 16px rgba(255,180,0,.15)}
+  .node.milestone{width:78px;min-height:64px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,rgba(255,215,0,.13),rgba(0,80,180,.1));border-color:rgba(255,215,0,.5)}
+  .node.milestone .ms{text-align:center;font-weight:800;font-size:12.5px;color:var(--gold);letter-spacing:.5px}
+  .node.milestone .ms small{display:block;font-weight:400;font-size:9px;color:var(--muted);margin-top:2px}
+  .node.ph{border-style:dashed;min-height:64px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .node.ph.hover{border-color:var(--gold);background:rgba(255,215,0,.07)}
+  .node.ph.filled{border-style:solid}
+  .node.ph.right{border-color:var(--green)}
+  .node.ph.wrong{border-color:var(--red)}
+  .node .drop{color:#3f5c78;font-size:10px;text-align:center;line-height:1.35;padding:14px}
+  .node .placed{text-align:center;padding:14px 6px;font-weight:800;font-size:15px;color:#eaf4ff}
+  .node .placed small{display:block;font-weight:400;font-size:10px;color:var(--muted);margin-top:2px}
+  .node .trip{display:grid;grid-template-columns:1fr 1fr 1fr}
+  .node .trip>div{padding:6px 0 4px;text-align:center;font-size:12px;border-right:0.5px solid rgba(0,140,255,.15);position:relative}
+  .node .trip>div:last-child{border-right:none}
+  .node .name{text-align:center;padding:7px 4px;background:rgba(0,140,255,.1);font-weight:800;font-size:13px;color:#eaf4ff;
+    border-top:0.5px solid rgba(0,140,255,.15);border-bottom:0.5px solid rgba(0,140,255,.15)}
+  .node .name small{display:block;font-weight:400;font-size:9px;color:var(--muted)}
+  .node .cell b{position:absolute;top:1px;left:4px;font-size:7px;color:#4a6a88;letter-spacing:.5px}
+  .node .fixed{color:var(--muted)}
+  .node input{width:100%;background:transparent;border:none;text-align:center;color:var(--text);font-size:13px;
+    font-family:inherit;padding:6px 0 4px;outline:none}
+  .node input:disabled{color:#3f5c78}
+  .node input.good{color:var(--green);font-weight:800}
+  .node input.err{color:#ff8a96;font-weight:800;background:rgba(255,68,85,.08)}
+  .legend{font-size:11px;color:var(--muted);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  .qopts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .qopt{padding:8px 14px;border-radius:8px;border:0.5px solid var(--line);background:rgba(0,40,110,.25);
+    cursor:pointer;font-size:13px;font-weight:700;color:#bcd8f2;user-select:none}
+  .qopt.on{background:var(--blue2);border-color:transparent;color:#fff}
+  .qblock{padding:14px 0;border-bottom:0.5px solid rgba(0,140,255,.12)}
+  .qblock:last-child{border-bottom:none}
+  .qnum{background:rgba(0,140,255,.15);color:#8fd0ff;font-weight:800;border-radius:6px;padding:1px 8px;font-size:12px;margin-right:8px}
+  .dur-in{width:80px;padding:9px;border-radius:8px;border:0.5px solid var(--line);background:rgba(0,30,80,.4);
+    color:#fff;font-size:15px;font-weight:700;text-align:center;font-family:inherit}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Network Diagram Trainer</h1>
+  <div class="sub">Critical Path Method — build the network, run the forward &amp; backward pass, then analyze float and the critical path.</div>
+  <div class="picker" id="picker"></div>
+
+  <div class="steps" id="steps">
+    <div class="step active" data-s="0"><span class="n">1</span>Build network</div>
+    <div class="step" data-s="1"><span class="n">2</span>Forward pass</div>
+    <div class="step" data-s="2"><span class="n">3</span>Backward pass</div>
+    <div class="step" data-s="3"><span class="n">4</span>Analyze</div>
+  </div>
+
+  <div class="card">
+    <h2 id="scenName">Project activities</h2>
+    <div class="hint">The project runs from <b style="color:var(--gold)">Start</b> to <b style="color:var(--gold)">Finish</b>. Each activity shows its duration (days) and the activities that must finish before it can start.</div>
+    <table id="deptable"><thead><tr><th>Activity</th><th>Duration</th><th>Predecessors</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card" id="phase0">
+    <h2>Step 1 — Build the network</h2>
+    <div class="hint">The map already has <b style="color:var(--gold)">Start</b> and <b style="color:var(--gold)">Finish</b> in place. Drag each activity into the box where it belongs (or tap an activity, then tap a box). Follow the arrows and the predecessor table.</div>
+    <div class="tray" id="tray"></div>
+    <div class="diagram-scroll"><div class="diagram" id="diagram"><svg class="links" id="links"></svg></div></div>
+    <div class="msg" id="msg0"></div>
+    <div class="row">
+      <button class="btn" id="check0">Check placement</button>
+      <button class="btn ghost" id="reveal0">Show me</button>
+      <button class="btn ghost" id="reset0">Reset</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="phasePass">
+    <h2 id="passTitle">Step 2 — Forward pass</h2>
+    <div class="hint" id="passHint"></div>
+    <div class="diagram-scroll"><div class="diagram" id="diagram2"><svg class="links" id="links2"></svg></div></div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--gold)"></span>Critical path</span>
+      <span>Top row: ES · Duration · EF</span><span>Bottom row: LS · Float · LF</span>
+    </div>
+    <div class="msg" id="msgD"></div>
+    <div class="row">
+      <button class="btn" id="checkD">Check forward pass</button>
+      <button class="btn ghost" id="revealD">Reveal this pass</button>
+      <button class="btn ghost" id="clearD">Clear</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="phase3">
+    <h2>Step 4 — Analyze the schedule</h2>
+    <div class="qblock"><div style="font-size:14px;margin-bottom:2px"><span class="qnum">Q1</span>Which activities are on the <b>critical path</b>?</div>
+      <div class="hint">Select every activity with zero float.</div><div class="qopts" id="qcrit"></div></div>
+    <div class="qblock"><div style="font-size:14px;margin-bottom:2px"><span class="qnum">Q2</span>Which activities have <b>float</b> (slack)?</div>
+      <div class="hint">Select every activity that can slip without delaying the project.</div><div class="qopts" id="qfloat"></div></div>
+    <div class="qblock"><div style="font-size:14px;margin-bottom:2px"><span class="qnum">Q3</span>In how many <b>days</b> will the project finish?</div>
+      <input class="dur-in" id="qdur" type="number" min="0" placeholder="days"></div>
+    <div class="msg" id="msg3"></div>
+    <div class="row"><button class="btn gold" id="check3">Check answers</button></div>
+  </div>
+
+  <div class="card hidden" id="done">
+    <h2 style="color:var(--green)">Solved ✓</h2>
+    <div id="doneText" class="hint"></div>
+    <div class="row"><button class="btn ghost" id="nextBtn">Next scenario →</button></div>
+  </div>
+</div>
+
+<script>
+/* ---------- scenario bank (6 different shapes) ---------- */
+const SCENARIOS = [
+  /* 1. LONG SERIAL CHAIN + one parallel bypass (looks long & thin) */
+  {name:'Bridge Repair', acts:[
+    {id:'A',name:'Inspect',dur:2,preds:[]}, {id:'B',name:'Close lanes',dur:3,preds:['A']},
+    {id:'C',name:'Demolish deck',dur:2,preds:['B']}, {id:'D',name:'Place rebar',dur:4,preds:['C']},
+    {id:'E',name:'Pour deck',dur:3,preds:['D','G']}, {id:'F',name:'Cure & reopen',dur:2,preds:['E']},
+    {id:'G',name:'Reroute traffic',dur:6,preds:['A']} ]},
+  /* 2. WIDE fan-out / fan-in (looks short & wide) */
+  {name:'Trade Show Booth', acts:[
+    {id:'A',name:'Plan booth',dur:2,preds:[]}, {id:'B',name:'Print graphics',dur:4,preds:['A']},
+    {id:'C',name:'Fabricate frame',dur:3,preds:['A']}, {id:'D',name:'Order furniture',dur:2,preds:['A']},
+    {id:'E',name:'Mount graphics',dur:3,preds:['B']}, {id:'F',name:'Build structure',dur:5,preds:['C']},
+    {id:'G',name:'Install fixtures',dur:2,preds:['C','D']}, {id:'H',name:'Assemble & test',dur:3,preds:['E','F','G']} ]},
+  /* 3. DIAMOND: two multi-step chains that split then merge */
+  {name:'Two Teams', acts:[
+    {id:'A',name:'Charter',dur:2,preds:[]}, {id:'B',name:'Design hardware',dur:4,preds:['A']},
+    {id:'C',name:'Build hardware',dur:3,preds:['B']}, {id:'D',name:'Design software',dur:5,preds:['A']},
+    {id:'E',name:'Build software',dur:4,preds:['D']}, {id:'F',name:'Integrate',dur:2,preds:['C','E']} ]},
+  /* 4. MULTIPLE starts and MULTIPLE ends */
+  {name:'Twin Kickoffs', acts:[
+    {id:'A',name:'Site prep',dur:3,preds:[]}, {id:'B',name:'Secure permits',dur:2,preds:[]},
+    {id:'C',name:'Foundation',dur:4,preds:['A','B']}, {id:'D',name:'Grading',dur:3,preds:['A']},
+    {id:'E',name:'Survey',dur:2,preds:['B']}, {id:'F',name:'Erect building',dur:3,preds:['C','D']},
+    {id:'G',name:'Build parking',dur:4,preds:['C','E']} ]},
+  /* 5. DEEP staircase, 5 levels */
+  {name:'Staggered Build', acts:[
+    {id:'A',name:'Mobilize',dur:2,preds:[]}, {id:'B',name:'Framing',dur:4,preds:['A']},
+    {id:'C',name:'Rough wiring',dur:3,preds:['A']}, {id:'D',name:'Drywall',dur:2,preds:['B']},
+    {id:'E',name:'Plumbing',dur:5,preds:['B','C']}, {id:'F',name:'Fixtures',dur:3,preds:['D','E']},
+    {id:'G',name:'Paint',dur:2,preds:['E']}, {id:'H',name:'Final inspect',dur:3,preds:['F','G']} ]},
+  /* 6. Cross-linked MESH with two endpoints */
+  {name:'Program Rollout', acts:[
+    {id:'A',name:'Kickoff',dur:3,preds:[]}, {id:'B',name:'Research',dur:2,preds:['A']},
+    {id:'C',name:'Prototype',dur:4,preds:['A']}, {id:'D',name:'User testing',dur:3,preds:['B']},
+    {id:'E',name:'Refine design',dur:2,preds:['B','C']}, {id:'F',name:'Pilot run',dur:5,preds:['C']},
+    {id:'G',name:'Rollout',dur:2,preds:['D','E']}, {id:'H',name:'Support setup',dur:3,preds:['E','F']} ]},
+];
+
+/* ---------- solver ---------- */
+function solve(acts){
+  const m={}; acts.forEach(a=> m[a.id]={...a, succ:[]});
+  acts.forEach(a=> a.preds.forEach(p=> m[p].succ.push(a.id)));
+  const indeg={}; acts.forEach(a=> indeg[a.id]=a.preds.length);
+  let q=acts.filter(a=>indeg[a.id]===0).map(a=>a.id); const order=[];
+  while(q.length){ const id=q.shift(); order.push(id); m[id].succ.forEach(s=>{ if(--indeg[s]===0) q.push(s); }); }
+  order.forEach(id=>{ const n=m[id];
+    n.ES=n.preds.length?Math.max(...n.preds.map(p=>m[p].EF)):0; n.EF=n.ES+n.dur;
+    n.level=n.preds.length?Math.max(...n.preds.map(p=>m[p].level))+1:0; });
+  const dur=Math.max(...acts.map(a=>m[a.id].EF));
+  [...order].reverse().forEach(id=>{ const n=m[id];
+    n.LF=n.succ.length?Math.min(...n.succ.map(s=>m[s].LS)):dur; n.LS=n.LF-n.dur; });
+  acts.forEach(a=>{ const n=m[a.id]; n.float=n.LS-n.ES; n.critical=n.float===0; });
+  return {m,order,dur};
+}
+
+/* ---------- state ---------- */
+let ACTS, SOL, MAXLVL, NOPREDS, NOSUCCS, selChip=null, passMode='fwd', curIdx=0;
+
+function setStep(active, done){ document.querySelectorAll('#steps .step').forEach(el=>{
+  const s=+el.dataset.s; el.classList.toggle('active', s===active); el.classList.toggle('done', done.includes(s)); }); }
+
+/* ---------- picker ---------- */
+(function(){ const p=document.getElementById('picker');
+  SCENARIOS.forEach((s,i)=>{ const b=document.createElement('button'); b.className='pbtn'+(i===0?' on':'');
+    b.innerHTML=`<span class="pn">${i+1}</span>${s.name}`; b.onclick=()=>loadScenario(i); p.appendChild(b); }); })();
+
+/* ---------- arrows (activities + Start/Finish) ---------- */
+function drawLinks(diaId,svgId){
+  const dia=document.getElementById(diaId), svg=document.getElementById(svgId);
+  const base=dia.getBoundingClientRect();
+  svg.setAttribute('width',dia.scrollWidth); svg.setAttribute('height',dia.scrollHeight);
+  const links=[]; ACTS.forEach(a=> a.preds.forEach(p=> links.push([p,a.id])));
+  NOPREDS.forEach(id=> links.push(['START',id])); NOSUCCS.forEach(id=> links.push([id,'FINISH']));
+  let out='<defs><marker id="ar-'+svgId+'" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(0,170,255,.75)"/></marker></defs>';
+  links.forEach(([from,to])=>{ const f=document.getElementById(diaId+'-node-'+from), t=document.getElementById(diaId+'-node-'+to);
+    if(!f||!t) return; const fr=f.getBoundingClientRect(), tr=t.getBoundingClientRect();
+    const x1=fr.right-base.left, y1=fr.top-base.top+fr.height/2, x2=tr.left-base.left, y2=tr.top-base.top+tr.height/2, mx=(x1+x2)/2;
+    out+=`<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="rgba(0,150,255,.45)" stroke-width="1.5" marker-end="url(#ar-${svgId})"/>`; });
+  svg.innerHTML=out;
+}
+function msNode(diaId,which){ const d=document.createElement('div'); d.className='node milestone'; d.id=diaId+'-node-'+which;
+  d.innerHTML=`<div class="ms">${which}${which==='START'?'<small>Day 0</small>':''}</div>`; return d; }
+
+/* ---------- diagram builders ---------- */
+function phBox(a){ const box=document.createElement('div'); box.className='node ph'; box.id='diagram-node-'+a.id;
+  box.dataset.target=a.id; box.dataset.placed=''; box.innerHTML='<div class="drop">drop<br>activity</div>';
+  const h=()=>{ if(selChip){placeInBox(box);} else if(box.dataset.placed){clearBox(box);} }; box.onclick=h;
+  box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('hover');});
+  box.addEventListener('dragleave',()=>box.classList.remove('hover'));
+  box.addEventListener('drop',e=>{e.preventDefault();box.classList.remove('hover');placeInBox(box);});
+  return box; }
+function cell(k,val,fixed){ return fixed?`<div class="cell fixed"><b>${k}</b>${val}</div>`
+  :`<div class="cell"><b>${k}</b><input data-k="${k}" inputmode="numeric" disabled></div>`; }
+function fullNode(a){ const n=SOL.m[a.id]; const d=document.createElement('div');
+  d.className='node'+(n.critical?' crit':''); d.id='diagram2-node-'+a.id;
+  d.innerHTML=`<div class="trip">${cell('ES','')}${cell('Dur',a.dur,true)}${cell('EF','')}</div>
+    <div class="name">${a.id}<small>${a.name}</small></div>
+    <div class="trip">${cell('LS','')}${cell('Flt','',true)}${cell('LF','')}</div>`; return d; }
+function renderDiagram(diaId,svgId,mode){
+  const dia=document.getElementById(diaId); dia.querySelectorAll('.dcol').forEach(e=>e.remove());
+  const sc=document.createElement('div'); sc.className='dcol'; sc.appendChild(msNode(diaId,'START')); dia.appendChild(sc);
+  for(let lv=0;lv<=MAXLVL;lv++){ const col=document.createElement('div'); col.className='dcol';
+    ACTS.filter(a=>SOL.m[a.id].level===lv).forEach(a=> col.appendChild(mode==='ph'?phBox(a):fullNode(a))); dia.appendChild(col); }
+  const fc=document.createElement('div'); fc.className='dcol'; fc.appendChild(msNode(diaId,'FINISH')); dia.appendChild(fc);
+  requestAnimationFrame(()=>drawLinks(diaId,svgId));
+}
+
+/* ---------- load / reset ---------- */
+function loadScenario(idx){
+  curIdx=idx; const sc=SCENARIOS[idx];
+  ACTS=sc.acts.map(a=>({...a,preds:[...a.preds]}));
+  SOL=solve(ACTS); MAXLVL=Math.max(...ACTS.map(a=>SOL.m[a.id].level));
+  NOPREDS=ACTS.filter(a=>a.preds.length===0).map(a=>a.id);
+  NOSUCCS=ACTS.filter(a=>SOL.m[a.id].succ.length===0).map(a=>a.id);
+  selChip=null; passMode='fwd';
+  document.querySelectorAll('#picker .pbtn').forEach((b,i)=>b.classList.toggle('on',i===idx));
+  document.getElementById('scenName').textContent=sc.name;
+  // reset UI
+  document.getElementById('phase0').classList.remove('hidden');
+  document.getElementById('phasePass').classList.add('hidden');
+  document.getElementById('phase3').classList.add('hidden');
+  document.getElementById('done').classList.add('hidden');
+  document.getElementById('diagram2').querySelectorAll('.dcol').forEach(e=>e.remove());
+  document.getElementById('links2').innerHTML='';
+  document.getElementById('qcrit').innerHTML=''; document.getElementById('qfloat').innerHTML=''; document.getElementById('qdur').value='';
+  ['msg0','msgD','msg3'].forEach(id=>document.getElementById(id).className='msg');
+  buildTable(); buildTray(); renderDiagram('diagram','links','ph'); setStep(0,[]);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function buildTable(){
+  const tb=document.querySelector('#deptable tbody'); tb.innerHTML='';
+  const start=document.createElement('tr'); start.className='msrow';
+  start.innerHTML=`<td><span class="aid ms">◆</span> Start</td><td>—</td><td style="color:#456">— project start —</td>`; tb.appendChild(start);
+  ACTS.forEach(a=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="aid">${a.id}</span> ${a.name}</td><td>${a.dur} d</td>
+      <td>${a.preds.length?a.preds.join(', '):'<span style="color:var(--gold)">Start</span>'}</td>`; tb.appendChild(tr); });
+  const fin=document.createElement('tr'); fin.className='msrow';
+  fin.innerHTML=`<td><span class="aid ms">◆</span> Finish</td><td>—</td><td>${NOSUCCS.join(', ')}</td>`; tb.appendChild(fin);
+}
+function buildTray(){
+  const tray=document.getElementById('tray'); tray.innerHTML='';
+  ACTS.slice().sort(()=>Math.random()-0.5).forEach(a=>{
+    const c=document.createElement('div'); c.className='chip'; c.dataset.id=a.id; c.draggable=true; c.innerHTML=`<b>${a.id}</b>${a.name}`;
+    c.onclick=()=>{ if(c.classList.contains('placed'))return;
+      if(selChip===c){selChip=null;c.classList.remove('sel');}
+      else{document.querySelectorAll('.chip.sel').forEach(x=>x.classList.remove('sel'));selChip=c;c.classList.add('sel');} };
+    c.addEventListener('dragstart',()=>{selChip=c;}); tray.appendChild(c); });
+}
+
+/* ---------- placement ---------- */
+function placeInBox(box){ if(!selChip) return; const id=selChip.dataset.id;
+  document.querySelectorAll('#diagram .node.ph').forEach(b=>{ if(b!==box && b.dataset.placed===id) clearBox(b); });
+  box.dataset.placed=id; box.innerHTML=`<div class="placed">${id}<small>${SOL.m[id].name}</small></div>`;
+  box.classList.add('filled'); box.classList.remove('right','wrong');
+  box.onclick=()=>{ if(selChip){placeInBox(box);} else if(box.dataset.placed){clearBox(box);} };
+  syncTray(); selChip.classList.remove('sel'); selChip=null; }
+function clearBox(box){ box.dataset.placed=''; box.innerHTML='<div class="drop">drop<br>activity</div>';
+  box.classList.remove('filled','right','wrong');
+  box.onclick=()=>{ if(selChip){placeInBox(box);} else if(box.dataset.placed){clearBox(box);} }; syncTray(); }
+function syncTray(){ const placed=[...document.querySelectorAll('#diagram .node.ph')].map(b=>b.dataset.placed).filter(Boolean);
+  document.querySelectorAll('#tray .chip').forEach(c=>c.classList.toggle('placed', placed.includes(c.dataset.id))); }
+
+document.getElementById('check0').onclick=()=>{ const boxes=[...document.querySelectorAll('#diagram .node.ph')]; const msg=document.getElementById('msg0');
+  if(boxes.some(b=>!b.dataset.placed)){ msg.className='msg bad'; msg.textContent='Place every activity on the network first.'; return; }
+  let wrong=0; boxes.forEach(b=>{ const ok=b.dataset.placed===b.dataset.target; b.classList.toggle('right',ok); b.classList.toggle('wrong',!ok); if(!ok)wrong++; });
+  if(wrong){ msg.className='msg bad'; msg.textContent=`${wrong} activit${wrong>1?'ies are':'y is'} in the wrong box — follow the arrows from each predecessor.`; return; }
+  msg.className='msg ok'; msg.textContent='Network built correctly! Starting the forward pass…'; setTimeout(startPasses,750); };
+document.getElementById('reveal0').onclick=()=>{ document.querySelectorAll('#diagram .node.ph').forEach(b=>{ b.dataset.placed=b.dataset.target;
+  b.innerHTML=`<div class="placed">${b.dataset.target}<small>${SOL.m[b.dataset.target].name}</small></div>`; b.classList.add('filled','right'); b.classList.remove('wrong');
+  b.onclick=()=>{ if(selChip){placeInBox(b);} else if(b.dataset.placed){clearBox(b);} }; }); syncTray();
+  const msg=document.getElementById('msg0'); msg.className='msg ok'; msg.textContent='Here is the correct network. Press “Check placement” to continue.'; };
+document.getElementById('reset0').onclick=()=>{ document.querySelectorAll('#diagram .node.ph').forEach(clearBox);
+  document.querySelectorAll('#tray .chip').forEach(c=>c.classList.remove('placed','sel')); document.getElementById('msg0').className='msg'; };
+
+/* ---------- passes ---------- */
+function startPasses(){ document.getElementById('phase0').classList.add('hidden'); document.getElementById('phasePass').classList.remove('hidden');
+  renderDiagram('diagram2','links2','full'); window.addEventListener('resize',()=>drawLinks('diagram2','links2'));
+  setPass('fwd'); setStep(1,[0]); document.getElementById('phasePass').scrollIntoView({behavior:'smooth',block:'start'}); }
+function setPass(mode){ passMode=mode; const fwd=mode==='fwd';
+  document.getElementById('passTitle').textContent=fwd?'Step 2 — Forward pass':'Step 3 — Backward pass';
+  document.getElementById('passHint').innerHTML=fwd
+    ? 'Fill in <b>Early Start (ES)</b> and <b>Early Finish (EF)</b> for every node. Start at ES = 0. EF = ES + duration. A node’s ES is the largest EF among its predecessors.'
+    : 'Now the <b>Late Finish (LF)</b> and <b>Late Start (LS)</b>. The last activities’ LF equals the project duration. LS = LF − duration. A node’s LF is the smallest LS among its successors.';
+  document.getElementById('checkD').textContent=fwd?'Check forward pass':'Check backward pass';
+  document.querySelectorAll('#diagram2 .node input').forEach(inp=>{ const isFwd=inp.dataset.k==='ES'||inp.dataset.k==='EF';
+    inp.disabled=fwd?!isFwd:isFwd; inp.classList.remove('good','err'); });
+  setStep(fwd?1:2, fwd?[0]:[0,1]); }
+document.getElementById('checkD').onclick=()=>{ const keys=passMode==='fwd'?['ES','EF']:['LS','LF']; let filled=0,correct=0,total=ACTS.length*2;
+  ACTS.forEach(a=>{ const n=SOL.m[a.id]; keys.forEach(k=>{ const inp=document.querySelector('#diagram2-node-'+a.id+' input[data-k="'+k+'"]');
+    inp.classList.remove('good','err'); const v=inp.value.trim(); if(v==='')return; filled++;
+    if(parseInt(v,10)===n[k]){inp.classList.add('good');correct++;} else inp.classList.add('err'); }); });
+  const msg=document.getElementById('msgD');
+  if(filled<total){ msg.className='msg bad'; msg.textContent=`Fill in all ${total} values (${filled} done).`; return; }
+  if(correct===total){ if(passMode==='fwd'){ msg.className='msg ok'; msg.textContent='Forward pass correct! Now work backward.'; setTimeout(()=>{setPass('bwd');msg.className='msg';},900); }
+    else{ msg.className='msg ok'; msg.textContent='Backward pass correct! Revealing float and the critical path…'; setTimeout(finishPasses,900); } }
+  else{ msg.className='msg bad'; msg.textContent=`${correct} of ${total} correct — red cells need another look.`; } };
+document.getElementById('revealD').onclick=()=>{ const keys=passMode==='fwd'?['ES','EF']:['LS','LF'];
+  ACTS.forEach(a=>{ const n=SOL.m[a.id]; keys.forEach(k=>{ const inp=document.querySelector('#diagram2-node-'+a.id+' input[data-k="'+k+'"]');
+    inp.value=n[k]; inp.classList.remove('err'); inp.classList.add('good'); }); }); };
+document.getElementById('clearD').onclick=()=>{ const keys=passMode==='fwd'?['ES','EF']:['LS','LF'];
+  ACTS.forEach(a=>keys.forEach(k=>{ const inp=document.querySelector('#diagram2-node-'+a.id+' input[data-k="'+k+'"]'); inp.value=''; inp.classList.remove('good','err'); }));
+  document.getElementById('msgD').className='msg'; };
+function finishPasses(){ ACTS.forEach(a=>{ const n=SOL.m[a.id]; const cells=document.querySelectorAll('#diagram2-node-'+a.id+' .trip:last-child .cell');
+  if(cells[1]) cells[1].innerHTML='<b>Flt</b>'+n.float; document.querySelectorAll('#diagram2-node-'+a.id+' input').forEach(i=>i.disabled=true); });
+  document.getElementById('phase3').classList.remove('hidden'); buildQuestions(); setStep(3,[0,1,2]);
+  document.getElementById('phase3').scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ---------- questions ---------- */
+function optRow(container){ ACTS.forEach(a=>{ const o=document.createElement('div'); o.className='qopt'; o.textContent=a.id; o.dataset.id=a.id;
+  o.onclick=()=>o.classList.toggle('on'); container.appendChild(o); }); }
+function buildQuestions(){ optRow(document.getElementById('qcrit')); optRow(document.getElementById('qfloat')); }
+function picks(id){ return [...document.querySelectorAll('#'+id+' .qopt.on')].map(o=>o.dataset.id).sort(); }
+function eqSet(a,b){ return a.length===b.length && a.every((x,i)=>x===b[i]); }
+document.getElementById('check3').onclick=()=>{ const crit=ACTS.filter(a=>SOL.m[a.id].critical).map(a=>a.id).sort();
+  const flt=ACTS.filter(a=>!SOL.m[a.id].critical).map(a=>a.id).sort();
+  const okCrit=eqSet(picks('qcrit'),crit), okFlt=eqSet(picks('qfloat'),flt), okDur=parseInt(document.getElementById('qdur').value,10)===SOL.dur;
+  const msg=document.getElementById('msg3');
+  if(okCrit&&okFlt&&okDur){ msg.className='msg'; document.getElementById('phase3').classList.add('hidden');
+    document.getElementById('done').classList.remove('hidden');
+    document.getElementById('doneText').innerHTML=`Critical path: <b style="color:var(--gold)">Start → ${crit.join(' → ')} → Finish</b> &nbsp;·&nbsp; Project duration: <b>${SOL.dur} days</b><br>Activities with float: ${flt.length?flt.map(id=>`${id} (${SOL.m[id].float}d)`).join(', '):'none'}.`;
+    setStep(3,[0,1,2,3]); document.getElementById('done').scrollIntoView({behavior:'smooth',block:'start'}); }
+  else{ const bits=[]; if(!okCrit)bits.push('critical path'); if(!okFlt)bits.push('float list'); if(!okDur)bits.push('project duration');
+    msg.className='msg bad'; msg.textContent='Check again — '+bits.join(', ')+' '+(bits.length>1?'are':'is')+' not right yet.'; } };
+document.getElementById('nextBtn').onclick=()=>loadScenario((curIdx+1)%SCENARIOS.length);
+
+/* ---------- go ---------- */
+loadScenario(0);
+[[CPMEND]]
+</body>
+</html>
+
+</script>
       </div>
     </main>
     <footer class="app-footer">
@@ -5172,13 +5580,15 @@ const EXAMPREP_TABS = [
   {id:'ep_case', label:'📋 Case Study'},
   {id:'ep_drag', label:'🔀 Drag & Drop'},
   {id:'ep_hot', label:'🎯 Hot Spot'},
+  {id:'cpm', label:'🗺️ Network Diagram'},
 ];
-const EXAMPREP_ICONS = { ep_case:'📋', ep_drag:'🔀', ep_hot:'🎯' };
-const EXAMPREP_NAMES = { ep_case:'Case Study', ep_drag:'Drag & Drop', ep_hot:'Hot Spot' };
+const EXAMPREP_ICONS = { ep_case:'📋', ep_drag:'🔀', ep_hot:'🎯', cpm:'🗺️' };
+const EXAMPREP_NAMES = { ep_case:'Case Study', ep_drag:'Drag & Drop', ep_hot:'Hot Spot', cpm:'Network Diagram' };
 const EXAMPREP_DESCRIPTIONS = {
   ep_case:'Read a real-world project scenario and answer 4-5 questions. One case study per domain.',
   ep_drag:'Drag items into the correct order, category, or match. Mirrors actual PMP exam format.',
   ep_hot:'Click the correct area on a diagram or matrix. Tests visual interpretation skills.',
+  cpm:'Build the network from an activity table, run the forward and backward pass, then find float and the critical path.',
 };
 
 const GAME_DESCRIPTIONS = {
@@ -5302,6 +5712,15 @@ function logGamePlay(id) {
   } catch (e) { /* non-blocking */ }
 }
 
+function renderCPM(){
+  var panel = document.getElementById('game-panel-cpm');
+  if (!panel || panel.querySelector('#cpm-frame')) return;
+  var holder = document.getElementById('cpm-src');
+  var src = holder ? holder.textContent.replace(/\[\[CPMEND\]\]/g, '<\/script>') : '';
+  panel.innerHTML = '<iframe id="cpm-frame" title="Network Diagram Trainer" style="width:100%;height:80vh;border:0.5px solid rgba(0,140,255,0.25);border-radius:12px;background:#040d1c"></iframe>';
+  panel.querySelector('#cpm-frame').srcdoc = src;
+}
+
 function openGame(id) {
   const home = document.getElementById('games-home');
   if (home) home.style.display = 'none';
@@ -5342,6 +5761,7 @@ function openGame(id) {
       else if (id === 'ep_hot') renderHotSpot();
       else if (id === 'ep_sponsor') renderSponsorOffer();
       else if (id === 'flash') renderFlashcards();
+      else if (id === 'cpm') renderCPM();
     }
   }
 }

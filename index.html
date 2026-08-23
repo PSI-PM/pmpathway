@@ -868,6 +868,7 @@ button,[role=button]{min-height:24px;}
         </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:12px;color:var(--yellow-dark);font-weight:600" id="hdr-streak">🔥 0 days</div>
+        <div style="font-size:12px;color:#00e676;font-weight:600" id="hdr-plan">📅 0/30</div>
         <div style="position:relative" id="feedback-btn-wrap" style="margin-right:4px">
           <button onclick="showFeedbackModal()" title="Give Feedback" style="width:34px;height:34px;border-radius:50%;background:rgba(0,50,150,0.12);border:0.5px solid rgba(0,140,255,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer">💬</button>
         </div>
@@ -918,7 +919,7 @@ button,[role=button]{min-height:24px;}
         <button class="nav-btn" id="nav-games" onclick="showView('games',this)"><span class="nav-ico">🎮</span><span class="nav-lbl">Games</span></button>
         <button class="nav-btn" id="nav-exam" onclick="showView('exam',this)"><span class="nav-ico">📝</span><span class="nav-lbl">Exam</span></button>
         <button class="nav-btn" id="nav-progress" onclick="showView('progress',this)"><span class="nav-ico">📈</span><span class="nav-lbl">Progress</span></button>
-        <button class="nav-btn" id="nav-plan" onclick="showView('plan',this)"><span class="nav-ico">🗓️</span><span class="nav-lbl">Plan</span></button>
+        <button class="nav-btn" id="nav-plan" onclick="showView('plan',this)"><span class="nav-ico">🗓️</span><span class="nav-lbl">Study Plan</span></button>
       </nav>
     </header>
     <main class="app-main" id="main-content"><h1 id="page-h1" class="sr-only">Dashboard</h1>
@@ -2110,6 +2111,7 @@ async function toggleAdminStudentView() {
     const stEl = document.getElementById('hdr-streak');
     if (stEl) stEl.textContent = '🔥 ' + (profile?.streak || 0) + ' days';
     if(typeof refreshStreakDisplay==='function') refreshStreakDisplay();
+    if(typeof refreshPlanCounter==='function') refreshPlanCounter();
     loadNotifSettings();
     // Go straight to their dashboard (skip the baseline gate for staff)
     goView('dashboard');
@@ -2402,7 +2404,8 @@ var PLAN_PHASES = {1:['Week 1 \u2014 Foundations & People','Days 1\u20137'],8:['
 function planKey(){ try{ return 'pmp_plan_checks_' + ((typeof profile!=='undefined'&&profile&&profile.id)||(typeof user!=='undefined'&&user&&user.id)||'local'); }catch(e){ return 'pmp_plan_checks_local'; } }
 function planGetChecks(){ try{ return JSON.parse(localStorage.getItem(planKey())||'{}'); }catch(e){ return {}; } }
 function planUpdateProgress(){ var n=Object.keys(planGetChecks()).length; var b=document.getElementById('plan-progress-bar'); var t=document.getElementById('plan-progress-txt'); if(b) b.style.width=(n/30*100)+'%'; if(t) t.textContent=n+' / 30 days complete'; }
-function planToggle(day){ if(typeof bumpStreak==='function') bumpStreak(); var c=planGetChecks(); if(c[day]) delete c[day]; else c[day]=1; try{ localStorage.setItem(planKey(),JSON.stringify(c)); }catch(e){} var el=document.getElementById('planday-'+day); if(el) el.classList.toggle('checked'); planUpdateProgress(); }
+function refreshPlanCounter(){ try{ var n=Object.keys(planGetChecks()).length; var el=document.getElementById('hdr-plan'); if(el) el.textContent='\uD83D\uDCC5 '+n+'/30'; }catch(e){} }
+function planToggle(day){ if(typeof bumpStreak==='function') bumpStreak(); var c=planGetChecks(); if(c[day]) delete c[day]; else c[day]=1; try{ localStorage.setItem(planKey(),JSON.stringify(c)); }catch(e){} var el=document.getElementById('planday-'+day); if(el) el.classList.toggle('checked'); planUpdateProgress(); if(typeof refreshPlanCounter==='function') refreshPlanCounter(); }
 function renderPlan(){
   var checks=planGetChecks(); var tagcls={People:'people',Process:'process','Business Env.':'biz',Baseline:'ms',Mock:'ms',Review:'ms'};
   var html='<div class="planv"><div class="plan-top"><div><div class="plan-title">Your 30-Day Study Plan</div><div class="plan-sub">Tap a day to mark it complete \u2014 your progress saves on this device.</div></div><div class="plan-prog"><div class="plan-prog-txt" id="plan-progress-txt"></div><div class="plan-prog-track"><div class="plan-prog-bar" id="plan-progress-bar"></div></div></div></div>';

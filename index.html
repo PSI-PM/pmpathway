@@ -7791,10 +7791,14 @@ function renderFormulaMatch() {
   const pool = pickFormulas(10);
   // Alternate between two match modes: name→formula and formula→name
   fmState = {
-    questions: pool.map((f,i) => ({
-      f,
-      mode: i % 2 === 0 ? 'name_to_formula' : 'formula_to_name',
-    })),
+    questions: pool.map((f,i) => {
+      const mode = i % 2 === 0 ? 'name_to_formula' : 'formula_to_name';
+      const isNtoF = mode === 'name_to_formula';
+      const correct = isNtoF ? f.formula : f.name;
+      const others = gameShuffle(FORMULAS.filter(o => o.id !== f.id)).slice(0,3);
+      const options = gameShuffle([correct, ...others.map(o => isNtoF ? o.formula : o.name)]);
+      return { f, mode, correct, options };
+    }),
     idx: 0, correct: 0, submitted: false, selected: null, done: false
   };
   document.getElementById('game-panel-fc_match').innerHTML = '<div id="fm-inner"></div>';
@@ -7813,13 +7817,12 @@ function renderFMInner() {
     </div>`;
     return;
   }
-  const {f, mode} = fmState.questions[fmState.idx];
+  const q = fmState.questions[fmState.idx];
+  const {f, mode} = q;
   const isNtoF = mode === 'name_to_formula';
   const prompt = isNtoF ? f.name : f.formula;
-  const correct = isNtoF ? f.formula : f.name;
-  // Wrong options from other formulas
-  const others = gameShuffle(FORMULAS.filter(o => o.id !== f.id)).slice(0,3);
-  const options = gameShuffle([correct, ...others.map(o => isNtoF ? o.formula : o.name)]);
+  const correct = q.correct;
+  const options = q.options;
 
   el.innerHTML = `
     <div style="${GS.header}">

@@ -2186,11 +2186,12 @@ async function loadUserData() {
   }
 
   // Load questions, resources, scores, and sessions in PARALLEL for speed
-  const [qAll, vResult, scResult, sessResult] = await Promise.all([
+  const [qAll, vResult, scResult, sessResult, qaResult] = await Promise.all([
     QUESTIONS.length ? Promise.resolve(null) : fetchAllQuestions(),
     SB.from('videos').select('task_num,youtube_url,podcast_url,workbook_url'),
     SB.from('task_scores').select('*').eq('user_id', user.id),
     SB.from('sessions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+    SB.from('question_attempts').select('question_id,task_num,is_correct').eq('user_id', user.id),
   ]);
 
   // Process questions
@@ -2212,6 +2213,10 @@ async function loadUserData() {
   // Process scores
   scores = {};
   (scResult.data || []).forEach(s => { scores[s.task_num] = { correct: s.correct, total: s.total, enablers_seen: s.enablers_seen || [] }; });
+
+  // Per-question latest answers -> accuracy (acing every question = 100%)
+  qAttByTask = {};
+  ((qaResult && qaResult.data) || []).forEach(r => { var agg=_qaEnsure(r.task_num); if(agg.ids[String(r.question_id)]===undefined) agg.answered++; else if(agg.ids[String(r.question_id)]!==!!r.is_correct) agg.correct += (r.is_correct?1:-1); if(agg.ids[String(r.question_id)]===undefined && r.is_correct) agg.correct++; agg.ids[String(r.question_id)] = !!r.is_correct; });
 
   // Process sessions
   sessions = (sessResult.data || []).map(s => ({
@@ -2359,10 +2364,23 @@ function initStudent() {
 // ══════════════════════════════════════════════════════
 // MASTERY HELPERS
 // ══════════════════════════════════════════════════════
+var qAttByTask = {};
+function _qaEnsure(t){ if(!qAttByTask[t]) qAttByTask[t]={answered:0,correct:0,ids:{}}; return qAttByTask[t]; }
+function taskLatestAccuracy(t, s){ var agg=qAttByTask[t]; if(agg && agg.answered>0) return agg.correct/agg.answered; return (s && s.total)? s.correct/s.total : 0; }
+function recordAttempt(q, isCorrect){ try{
+  if(!q || q.id==null || !q.task_num) return;
+  var t=q.task_num, qid=String(q.id), agg=_qaEnsure(t), prev=agg.ids[qid], ic=!!isCorrect;
+  if(prev===undefined){ agg.answered++; if(ic) agg.correct++; } else if(prev!==ic){ agg.correct += ic?1:-1; }
+  agg.ids[qid]=ic;
+  if(typeof user!=='undefined'&&user&&typeof SB!=='undefined'&&SB && !(typeof _impersonation!=='undefined'&&_impersonation)){
+    SB.from('question_attempts').upsert({ user_id:user.id, question_id:qid, task_num:t, enabler_num:q.enabler_num||null, is_correct:ic, updated_at:new Date().toISOString() }, { onConflict:'user_id,question_id' });
+  }
+}catch(e){} }
+
 function taskScore(t) {
   const s = scores[t];
   if (!s || s.total === 0) return null;
-  const performance = s.correct / s.total;
+  const performance = taskLatestAccuracy(t, s);
   // Coverage = enablers attempted / total enablers (cached index)
   const allEnablers = getTaskEnablers(t);
   const total = allEnablers.length;
@@ -2962,19 +2980,15 @@ function selectAnswer(letter, btn) {
   if (sb) sb.style.display = 'block';
 }
 
-function _streakKey(){ try{ return 'pmp_streak_'+((typeof profile!=='undefined'&&profile&&profile.id)||(typeof user!=='undefined'&&user&&user.id)||'local'); }catch(e){ return 'pmp_streak_local'; } }
 function _streakToday(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
-function _streakDiff(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
-function getStreakData(){ try{ return JSON.parse(localStorage.getItem(_streakKey())||'null'); }catch(e){ return null; } }
-function currentStreak(){ var s=getStreakData(); if(!s||!s.lastDate) return 0; var d=_streakDiff(s.lastDate,_streakToday()); return d>1?0:(s.count||0); }
-function refreshStreakDisplay(){ var n=currentStreak(); var t='\uD83D\uDD25 '+n+(n===1?' day':' days');
-  var hd=document.getElementById('hdr-streak'); if(hd) hd.textContent=t;
-  var sc=document.getElementById('streak-count'); if(sc) sc.textContent=n; }
-function bumpStreak(){ try{ var today=_streakToday(); var s=getStreakData(); var d=(s&&s.lastDate)?_streakDiff(s.lastDate,today):null;
-  if(d===0){ /* already counted today */ }
-  else if(d===1){ localStorage.setItem(_streakKey(),JSON.stringify({count:(s.count||0)+1,lastDate:today})); }
-  else { localStorage.setItem(_streakKey(),JSON.stringify({count:1,lastDate:today})); }
-  refreshStreakDisplay();
+function _streakDiff(a,b){ return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000); }
+function _streakDateStr(v){ if(!v) return null; try{ return String(v).slice(0,10); }catch(e){ return null; } }
+function currentStreak(){ if(typeof profile==='undefined'||!profile) return 0; var last=_streakDateStr(profile.streak_date); if(!last) return 0; var d=_streakDiff(_streakToday(), last); return d>1?0:(profile.streak||0); }
+function refreshStreakDisplay(){ var n=currentStreak(); var t='\uD83D\uDD25 '+n+(n===1?' day':' days'); var hd=document.getElementById('hdr-streak'); if(hd) hd.textContent=t; var sc=document.getElementById('streak-count'); if(sc) sc.textContent=n; }
+function bumpStreak(){ try{ if(typeof profile==='undefined'||!profile) return; if(typeof _impersonation!=='undefined'&&_impersonation) return; var today=_streakToday(); var last=_streakDateStr(profile.streak_date); var d=last?_streakDiff(today,last):null;
+  if(d===0) return;
+  var n=(d===1)?((profile.streak||0)+1):1; profile.streak=n; profile.streak_date=today; refreshStreakDisplay();
+  if(typeof user!=='undefined'&&user&&typeof SB!=='undefined'&&SB){ SB.from('users').update({streak:n, streak_date:today}).eq('id', user.id); }
 }catch(e){} }
 
 function submitAnswer() {
@@ -2984,6 +2998,7 @@ function submitAnswer() {
   const q = examQs[examIdx];
   const correctLetter = q._shuffledCorrect || q.correct;
   const correct = selectedLetter === correctLetter;
+  recordAttempt(q, correct);
   examAnswers[examIdx].correct = correct;
   examAnswers[examIdx].selectedLetter = selectedLetter;
 
@@ -4045,6 +4060,7 @@ async function saveStudyTime() {
   const totalSeconds = baseStudySeconds + sessionElapsed;
   const hours = totalSeconds / 3600;
   if (sessionElapsed < 5) return; // don't bother saving under 5 seconds of new time
+  if(typeof bumpStreak==='function') bumpStreak();
   await SB.from('users').update({ hours_studied: hours }).eq('id', user.id);
   if (profile) profile.hours_studied = hours;
 }

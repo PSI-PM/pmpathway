@@ -680,6 +680,45 @@ button,[role=button]{min-height:24px;}
     .app-header { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
   }
 </style>
+<style id="plan-styles">
+#view-plan .planv{max-width:820px;margin:0 auto}
+#view-plan .plan-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+#view-plan .plan-title{font-size:20px;font-weight:800;color:#fff}
+#view-plan .plan-sub{font-size:12px;color:#6b8eb0;margin-top:3px}
+#view-plan .plan-prog{min-width:210px;flex:1;max-width:280px}
+#view-plan .plan-prog-txt{font-size:12px;color:#8fd0ff;font-weight:700;margin-bottom:5px;text-align:right}
+#view-plan .plan-prog-track{height:8px;background:rgba(0,60,140,.4);border-radius:6px;overflow:hidden}
+#view-plan .plan-prog-bar{height:100%;width:0;background:linear-gradient(90deg,#0070e0,#00e676);transition:width .3s}
+#view-plan .plan-phase{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px;font-family:"Playfair Display",serif;font-size:17px;color:#fff;border-bottom:0.5px solid rgba(0,140,255,.25);padding-bottom:6px}
+#view-plan .plan-phase .pp-days{font-family:"Source Sans 3",sans-serif;font-size:10px;color:#6b8eb0;text-transform:uppercase;letter-spacing:.1em}
+#view-plan .plan-day{display:flex;gap:14px;background:#0a1830;border:0.5px solid rgba(0,140,255,.2);border-radius:11px;padding:14px 16px;margin-bottom:9px;cursor:pointer;transition:border-color .15s,background .15s}
+#view-plan .plan-day:hover{border-color:rgba(0,140,255,.45)}
+#view-plan .plan-day.mock{border-color:rgba(255,215,0,.5);background:linear-gradient(150deg,rgba(255,215,0,.06),#0a1830)}
+#view-plan .plan-day.rest{opacity:.82}
+#view-plan .plan-day.checked{border-color:rgba(0,224,120,.55);background:linear-gradient(150deg,rgba(0,224,120,.09),#0a1830)}
+#view-plan .plan-dn{flex:0 0 46px;text-align:center}
+#view-plan .pd-lbl{font-size:8px;color:#6b8eb0;text-transform:uppercase;letter-spacing:.1em}
+#view-plan .pd-num{font-family:"Playfair Display",serif;font-size:22px;font-weight:800;color:#00aaff;line-height:1.1}
+#view-plan .plan-day.mock .pd-num{color:#ffd700}
+#view-plan .plan-check{width:18px;height:18px;border:1.5px solid rgba(0,140,255,.45);border-radius:5px;margin:8px auto 0;position:relative}
+#view-plan .plan-day.checked .plan-check{background:#00e676;border-color:#00e676}
+#view-plan .plan-day.checked .plan-check::after{content:"\2713";position:absolute;top:-3px;left:2px;color:#04121f;font-size:15px;font-weight:900}
+#view-plan .plan-dc{flex:1;min-width:0}
+#view-plan .plan-focus{font-weight:800;font-size:14px;color:#eaf4ff}
+#view-plan .plan-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px}
+#view-plan .plan-tag.people{background:rgba(0,170,255,.16);color:#7cd0ff}
+#view-plan .plan-tag.process{background:rgba(0,224,170,.15);color:#4ce0c0}
+#view-plan .plan-tag.biz{background:rgba(255,170,0,.15);color:#ffc24d}
+#view-plan .plan-tag.ms{background:rgba(255,215,0,.18);color:#ffd700}
+#view-plan .plan-time{float:right;font-size:11px;color:#6b8eb0;font-weight:700;border:0.5px solid rgba(0,140,255,.2);border-radius:20px;padding:2px 9px;margin-left:8px}
+#view-plan .plan-ses-wrap{margin-top:7px}
+#view-plan .plan-ses{font-size:12.5px;color:#c3d8ec;line-height:1.55;margin-bottom:5px}
+#view-plan .plan-st{display:inline-block;min-width:104px;font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:#00aaff;margin-right:6px;vertical-align:top}
+#view-plan .plan-ses b{color:#fff}
+#view-plan .plan-goal{font-size:12px;color:#00e676;font-weight:700;margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(0,140,255,.12)}
+#view-plan .plan-goal::before{content:"\2713  "}
+@media(max-width:640px){#view-plan .plan-st{min-width:0;display:block;margin-bottom:1px}}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -879,6 +918,7 @@ button,[role=button]{min-height:24px;}
         <button class="nav-btn" id="nav-games" onclick="showView('games',this)"><span class="nav-ico">🎮</span><span class="nav-lbl">Games</span></button>
         <button class="nav-btn" id="nav-exam" onclick="showView('exam',this)"><span class="nav-ico">📝</span><span class="nav-lbl">Exam</span></button>
         <button class="nav-btn" id="nav-progress" onclick="showView('progress',this)"><span class="nav-ico">📈</span><span class="nav-lbl">Progress</span></button>
+        <button class="nav-btn" id="nav-plan" onclick="showView('plan',this)"><span class="nav-ico">🗓️</span><span class="nav-lbl">Plan</span></button>
       </nav>
     </header>
     <main class="app-main" id="main-content"><h1 id="page-h1" class="sr-only">Dashboard</h1>
@@ -900,7 +940,8 @@ button,[role=button]{min-height:24px;}
         </div>
         <div id="domains-container"></div>
       </div>
-      <div id="view-study" class="view">
+      <div id="view-plan" class="view"></div>
+<div id="view-study" class="view">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:10px;position:relative">
             <button onclick="toggleStudyMenu(event)" id="study-menu-btn" aria-label="Select a task" title="Jump to a task" style="padding:5px 11px;border-radius:7px;border:0.5px solid rgba(0,140,255,0.35);background:rgba(0,140,255,0.1);color:#60c0ff;font-size:18px;line-height:1;cursor:pointer">☰</button>
@@ -2068,6 +2109,7 @@ async function toggleAdminStudentView() {
     if (avEl) avEl.textContent = initials;
     const stEl = document.getElementById('hdr-streak');
     if (stEl) stEl.textContent = '🔥 ' + (profile?.streak || 0) + ' days';
+    if(typeof refreshStreakDisplay==='function') refreshStreakDisplay();
     loadNotifSettings();
     // Go straight to their dashboard (skip the baseline gate for staff)
     goView('dashboard');
@@ -2355,10 +2397,30 @@ function domainMastered(dn) {
 // ══════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════
+var PLAN_DAYS = [{"d": 1, "kind": "mock", "title": "Diagnostic & foundations", "tag": "Baseline", "time": "1.5 h", "ses": [["Assess · 45m", "<b>Baseline Quiz</b> — all 26 questions (one per task). In the <b>Progress tab</b>, write down your 3 weakest tasks."], ["Ground · 30m", "PMBOK 8 essentials: a project is <em>a temporary initiative in a unique context undertaken to create value</em>; the <b>7 Performance Domains</b> (Governance, Scope, Schedule, Finance, Stakeholders, Resources, Risk) and the 12 principles."], ["Set up · 15m", "Set your exam date. Tour the app — Study, Games, Exam, Progress."]], "goal": "Know your weak areas and the shape of the exam."}, {"d": 2, "kind": "people", "title": "People — vision & conflict (1.1–1.2)", "tag": "People", "time": "2 h", "ses": [["Learn · 55m", "Study tab → <b>1.1 Develop a common vision</b> + <b>1.2 Manage conflicts</b>: Video, Podcast, Workbook each. Focus: shared vision, sources/levels of conflict, conflict-resolution modes."], ["Practice · 45m", "~25 practice questions across 1.1–1.2; read the explanation on every miss."], ["Reinforce · 20m", "Word Search + 10 min Flashcards."]], "goal": "80%+ on 1.1 and 1.2."}, {"d": 3, "kind": "people", "title": "People — leading & engaging (1.3–1.4)", "tag": "People", "time": "2 h", "ses": [["Learn · 55m", "<b>1.3 Lead the project team</b> + <b>1.4 Engage stakeholders</b>. Focus: servant leadership, motivation, stakeholder identification & analysis (power/interest grid)."], ["Practice · 45m", "~25 questions on 1.3–1.4."], ["Reinforce · 20m", "Crossword + Flashcards."]], "goal": "80%+ on 1.3 and 1.4."}, {"d": 4, "kind": "people", "title": "People — expectations (1.5–1.6)", "tag": "People", "time": "2 h", "ses": [["Learn · 55m", "<b>1.5 Align stakeholder expectations</b> + <b>1.6 Manage stakeholder expectations</b>. Focus: setting/aligning expectations, engagement-assessment matrix, managing up."], ["Practice · 45m", "~25 questions on 1.5–1.6."], ["Reinforce · 20m", "Millionaire + Flashcards."]], "goal": "80%+ on 1.5 and 1.6."}, {"d": 5, "kind": "people", "title": "People — knowledge & communication (1.7–1.8)", "tag": "People", "time": "2 h", "ses": [["Learn · 55m", "<b>1.7 Help ensure knowledge transfer</b> + <b>1.8 Plan and manage communication</b>. Focus: explicit vs tacit knowledge, lessons learned, communication models & channels — n(n−1)/2."], ["Practice · 45m", "~25 questions on 1.7–1.8; practice the communication-channels formula."], ["Reinforce · 20m", "Jeopardy + Flashcards."]], "goal": "80%+ on 1.7–1.8; compute communication channels from memory."}, {"d": 6, "kind": "people", "title": "People domain review", "tag": "People", "time": "1.5 h", "ses": [["Review · 60m", "Progress tab → re-Practice every People task under 80%; re-read weak Workbooks."], ["Reinforce · 30m", "A People-heavy Case Study + Flashcards."]], "goal": "All 8 People tasks ≥ 80%."}, {"d": 7, "kind": "rest", "title": "Light day / rest", "tag": "", "time": "0.5 h", "ses": [["Optional · 30m", "Flashcards only — or take the day off. Rest consolidates memory."]], "goal": ""}, {"d": 8, "kind": "process", "title": "Process — plan & scope (2.1–2.2)", "tag": "Process", "time": "2 h", "ses": [["Learn · 55m", "<b>2.1 Develop an integrated PM plan & plan delivery</b> + <b>2.2 Develop and manage project scope</b>. Focus: integration, plan components, scope baseline, requirements, WBS."], ["Practice · 45m", "~25 questions on 2.1–2.2."], ["Reinforce · 20m", "Drag & Drop (process ordering) + Flashcards."]], "goal": "80%+ on 2.1 and 2.2."}, {"d": 9, "kind": "process", "title": "Process — value & resources (2.3–2.4)", "tag": "Process", "time": "2 h", "ses": [["Learn · 55m", "<b>2.3 Help ensure value-based delivery</b> + <b>2.4 Plan and manage resources</b>. Focus: value/increments/MVP, resource planning, RACI, team development."], ["Practice · 45m", "~25 questions on 2.3–2.4."], ["Reinforce · 20m", "Scramble + Flashcards."]], "goal": "80%+ on 2.3 and 2.4."}, {"d": 10, "kind": "process", "title": "Process — procurement, finance & EVM (2.5–2.6)", "tag": "Process", "time": "2.5 h", "ses": [["Learn · 55m", "<b>2.5 Plan and manage procurement</b> + <b>2.6 Plan and manage finance</b>. Focus: contract types (FP / CR / T&M), make-or-buy; budget, funding, earned value."], ["Formula drill · 40m", "Calculate It + Fill-in-Formula — EVM: EV, PV, AC, CV, SV, CPI, SPI, EAC, ETC, VAC, TCPI."], ["Practice · 35m", "~20 questions on 2.5–2.6 (watch for EVM word problems)."]], "goal": "80%+ on 2.5–2.6; EVM formulas from memory."}, {"d": 11, "kind": "process", "title": "Process — quality (2.7)", "tag": "Process", "time": "2 h", "ses": [["Learn · 45m", "<b>2.7 Plan and optimize quality of products/deliverables</b>. Focus: cost of quality, prevention vs inspection, quality tools (in PMBOK 8, quality sits under Scope)."], ["Practice · 40m", "~20 questions on 2.7."], ["Reinforce · 35m", "Formula Match + Hot Spot + Flashcards."]], "goal": "80%+ on 2.7."}, {"d": 12, "kind": "process", "title": "Process — schedule & critical path (2.8)", "tag": "Process", "time": "2.5 h", "ses": [["Learn · 45m", "<b>2.8 Plan and manage schedule</b>. Focus: sequencing, estimating, critical path, float, schedule compression (crashing vs fast-tracking)."], ["Network Diagram · 50m", "Games → <b>Network Diagram</b>: complete 3 scenarios — build the network, run the forward/backward pass, find float, the critical path, and duration."], ["Practice · 35m", "~20 questions on 2.8."]], "goal": "80%+ on 2.8; find critical path & float by hand."}, {"d": 13, "kind": "process", "title": "Process part-1 review (2.1–2.8)", "tag": "Process", "time": "2 h", "ses": [["Review · 70m", "Progress tab → re-Practice weak Process tasks 2.1–2.8."], ["Reinforce · 50m", "2 more Network Diagram scenarios + all 3 Formula games."]], "goal": "Tasks 2.1–2.8 ≥ 80%."}, {"d": 14, "kind": "rest", "title": "Light day / rest", "tag": "", "time": "0.5 h", "ses": [["Optional · 30m", "Flashcards + skim the formula sheet. Recharge for tomorrow's mock."]], "goal": ""}, {"d": 15, "kind": "mock", "title": "Full Mock Exam #1", "tag": "Mock", "time": "4 h", "ses": [["Exam · 4 h", "Exam tab → full timed mock (185 questions / 240 minutes) under real conditions — quiet room, breaks only when scheduled."]], "goal": "Finish it; record your per-domain scores."}, {"d": 16, "kind": "mock", "title": "Mock #1 deep-dive", "tag": "Review", "time": "1.5 h", "ses": [["Review · 90m", "Work through <em>every</em> missed question: read the explanation and re-open the related task's Workbook. Let the Progress tab update your readiness."]], "goal": "Understand why each miss was wrong."}, {"d": 17, "kind": "process", "title": "Process — status & closure (2.9–2.10)", "tag": "Process", "time": "2 h", "ses": [["Learn · 55m", "<b>2.9 Evaluate project status</b> + <b>2.10 Manage project closure</b>. Focus: performance measurement & reporting, closure activities, final lessons learned, releasing resources."], ["Practice · 45m", "~25 questions on 2.9–2.10."], ["Reinforce · 20m", "Fill in the Blank + Flashcards."]], "goal": "80%+ on 2.9 and 2.10."}, {"d": 18, "kind": "biz", "title": "Business Env — governance & compliance (3.1–3.2)", "tag": "Business Env.", "time": "2 h", "ses": [["Learn · 55m", "<b>3.1 Define and establish project governance</b> + <b>3.2 Plan and manage project compliance</b>. Focus: governance framework & decision rights, compliance categories, regulatory/legal."], ["Practice · 45m", "~25 questions on 3.1–3.2."], ["Reinforce · 20m", "Crossword + Flashcards."]], "goal": "80%+ on 3.1 and 3.2."}, {"d": 19, "kind": "biz", "title": "Business Env — changes & issues (3.3–3.4)", "tag": "Business Env.", "time": "2 h", "ses": [["Learn · 55m", "<b>3.3 Manage and control changes</b> + <b>3.4 Remove impediments and manage issues</b>. Focus: integrated change control & CCB; change vs issue vs risk; issue log."], ["Practice · 45m", "~25 questions on 3.3–3.4."], ["Reinforce · 20m", "Drag & Drop + Flashcards."]], "goal": "80%+ on 3.3 and 3.4."}, {"d": 20, "kind": "biz", "title": "Business Env — risk (3.5)", "tag": "Business Env.", "time": "2 h", "ses": [["Learn · 50m", "<b>3.5 Plan and manage risk</b>. Focus: qualitative vs quantitative analysis, probability–impact matrix, response strategies (threats: avoid / transfer / mitigate / accept / escalate; opportunities: exploit / share / enhance / accept), reserves."], ["Practice · 45m", "~25 questions on 3.5."], ["Reinforce · 25m", "Hot Spot (P×I matrix) + Flashcards."]], "goal": "80%+ on 3.5; recall every response strategy."}, {"d": 21, "kind": "rest", "title": "Light day / rest", "tag": "", "time": "0.5 h", "ses": [["Optional · 30m", "Flashcards only. Two-thirds done — keep the streak."]], "goal": ""}, {"d": 22, "kind": "biz", "title": "Business Env — improvement & org change (3.6–3.7)", "tag": "Business Env.", "time": "2 h", "ses": [["Learn · 55m", "<b>3.6 Continuous improvement</b> + <b>3.7 Support organizational change</b>. Focus: retrospectives, PDCA/Kaizen, change models (ADKAR, Kotter), change readiness."], ["Practice · 45m", "~25 questions on 3.6–3.7."], ["Reinforce · 20m", "Millionaire + Flashcards."]], "goal": "80%+ on 3.6 and 3.7."}, {"d": 23, "kind": "biz", "title": "Business Env — external environment & review (3.8)", "tag": "Business Env.", "time": "2 h", "ses": [["Learn · 40m", "<b>3.8 Evaluate external business environment changes</b>. Focus: PESTLE factors, market/regulatory shifts, impact on scope & benefits."], ["Practice · 40m", "~20 questions on 3.8."], ["Review · 40m", "Progress tab → re-Practice any Business-Environment task under 80%."]], "goal": "All 8 Business-Environment tasks ≥ 80%."}, {"d": 24, "kind": "", "title": "Skills drill day", "tag": "", "time": "2 h", "ses": [["Formulas · 40m", "All 3 Formula games until fast & accurate."], ["Schedule · 40m", "3 Network Diagram scenarios across different layouts."], ["Exam-prep · 40m", "1 Case Study + 1 Hot Spot + 1 Drag & Drop."]], "goal": "Formulas and critical-path work are automatic."}, {"d": 25, "kind": "mock", "title": "Full Mock Exam #2", "tag": "Mock", "time": "4 h", "ses": [["Exam · 4 h", "Full timed mock. Afterward, compare your per-domain scores to Mock #1."]], "goal": "A measurable climb over Mock #1."}, {"d": 26, "kind": "mock", "title": "Targeted weak-area review", "tag": "Review", "time": "2 h", "ses": [["Review · 90m", "Progress tab → the 5 lowest-mastery tasks anywhere; re-read the Workbook and re-Practice each."], ["Reinforce · 30m", "Flashcards on those weak-area terms."]], "goal": "No task below 75%."}, {"d": 27, "kind": "", "title": "Cross-domain practice", "tag": "", "time": "2 h", "ses": [["Mixed practice · 80m", "Mixed-domain question sets; concentrate on situational, PMP-mindset questions."], ["Reinforce · 40m", "Jeopardy + 1 Case Study."]], "goal": "Comfortable switching domains cold."}, {"d": 28, "kind": "mock", "title": "Full Mock Exam #3", "tag": "Mock", "time": "4 h", "ses": [["Exam · 4 h", "Final full timed mock — treat it exactly like exam day."]], "goal": "At or above your readiness goal."}, {"d": 29, "kind": "", "title": "Final consolidation", "tag": "", "time": "1.5 h", "ses": [["Review · 60m", "All Flashcards + the formula sheet; quick skim of any task still under 80%."], ["Mindset · 30m", "One Case Study to sharpen the PMP mindset. No new material."]], "goal": "Everything green; calm and ready."}, {"d": 30, "kind": "rest", "title": "Exam eve — rest", "tag": "", "time": "0.5 h", "ses": [["Light · 30m", "A few Flashcards, then stop. Confirm logistics (185 q / 240 min, scheduled breaks, ID & check-in time). Sleep well."]], "goal": "Rested and confident."}];
+var PLAN_PHASES = {1:['Week 1 \u2014 Foundations & People','Days 1\u20137'],8:['Week 2 \u2014 Process & Formulas','Days 8\u201314'],15:['Week 3 \u2014 Mock & Execution','Days 15\u201321'],22:['Week 4 \u2014 Business Environment & Final Prep','Days 22\u201330']};
+function planKey(){ try{ return 'pmp_plan_checks_' + ((typeof profile!=='undefined'&&profile&&profile.id)||(typeof user!=='undefined'&&user&&user.id)||'local'); }catch(e){ return 'pmp_plan_checks_local'; } }
+function planGetChecks(){ try{ return JSON.parse(localStorage.getItem(planKey())||'{}'); }catch(e){ return {}; } }
+function planUpdateProgress(){ var n=Object.keys(planGetChecks()).length; var b=document.getElementById('plan-progress-bar'); var t=document.getElementById('plan-progress-txt'); if(b) b.style.width=(n/30*100)+'%'; if(t) t.textContent=n+' / 30 days complete'; }
+function planToggle(day){ if(typeof bumpStreak==='function') bumpStreak(); var c=planGetChecks(); if(c[day]) delete c[day]; else c[day]=1; try{ localStorage.setItem(planKey(),JSON.stringify(c)); }catch(e){} var el=document.getElementById('planday-'+day); if(el) el.classList.toggle('checked'); planUpdateProgress(); }
+function renderPlan(){
+  var checks=planGetChecks(); var tagcls={People:'people',Process:'process','Business Env.':'biz',Baseline:'ms',Mock:'ms',Review:'ms'};
+  var html='<div class="planv"><div class="plan-top"><div><div class="plan-title">Your 30-Day Study Plan</div><div class="plan-sub">Tap a day to mark it complete \u2014 your progress saves on this device.</div></div><div class="plan-prog"><div class="plan-prog-txt" id="plan-progress-txt"></div><div class="plan-prog-track"><div class="plan-prog-bar" id="plan-progress-bar"></div></div></div></div>';
+  PLAN_DAYS.forEach(function(day){
+    if(PLAN_PHASES[day.d]){ html+='<div class="plan-phase"><span>'+PLAN_PHASES[day.d][0]+'</span><span class="pp-days">'+PLAN_PHASES[day.d][1]+'</span></div>'; }
+    var tag=day.tag?'<span class="plan-tag '+(tagcls[day.tag]||'')+'">'+day.tag+'</span>':'';
+    var ses=day.ses.map(function(s){return '<div class="plan-ses"><span class="plan-st">'+s[0]+'</span>'+s[1]+'</div>';}).join('');
+    var goal=day.goal?'<div class="plan-goal">'+day.goal+'</div>':'';
+    var cls='plan-day'+(day.kind?(' '+day.kind):'')+(checks[day.d]?' checked':'');
+    html+='<div class="'+cls+'" id="planday-'+day.d+'" onclick="planToggle('+day.d+')"><div class="plan-dn"><div class="pd-lbl">Day</div><div class="pd-num">'+day.d+'</div><div class="plan-check"></div></div><div class="plan-dc"><div class="plan-focus">'+day.title+tag+'<span class="plan-time">'+day.time+'</span></div><div class="plan-ses-wrap">'+ses+goal+'</div></div></div>';
+  });
+  html+='</div>'; var v=document.getElementById('view-plan'); if(v){ v.innerHTML=html; planUpdateProgress(); }
+}
+
 function showView(id, btn) {
   document.querySelectorAll('#student-app .view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + id).classList.add('active');
-  { var _h1=document.getElementById('page-h1'); if(_h1){ var _vn={dashboard:'Dashboard',study:'Study',exam:'Exam',progress:'Progress',games:'Games'}; _h1.textContent=_vn[id]||'PMPathway'; } }
+  { var _h1=document.getElementById('page-h1'); if(_h1){ var _vn={dashboard:'Dashboard',study:'Study',exam:'Exam',progress:'Progress',games:'Games',plan:'Study Plan'}; _h1.textContent=_vn[id]||'PMPathway'; } }
   if (btn) {
     document.querySelectorAll('#student-app .nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -2366,6 +2428,7 @@ function showView(id, btn) {
   if (id === 'dashboard') renderDashboard();
   if (id === 'progress') setTimeout(renderPerformanceTrend, 100);
   if (id === 'games') initGamesView();
+  if (id === 'plan') renderPlan();
   if (id === 'study') { startStudyTimer(); renderStudy(); }
   if (id === 'exam') resetExam();
   if (id === 'progress') renderProgress();
@@ -2896,9 +2959,25 @@ function selectAnswer(letter, btn) {
   if (sb) sb.style.display = 'block';
 }
 
+function _streakKey(){ try{ return 'pmp_streak_'+((typeof profile!=='undefined'&&profile&&profile.id)||(typeof user!=='undefined'&&user&&user.id)||'local'); }catch(e){ return 'pmp_streak_local'; } }
+function _streakToday(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function _streakDiff(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
+function getStreakData(){ try{ return JSON.parse(localStorage.getItem(_streakKey())||'null'); }catch(e){ return null; } }
+function currentStreak(){ var s=getStreakData(); if(!s||!s.lastDate) return 0; var d=_streakDiff(s.lastDate,_streakToday()); return d>1?0:(s.count||0); }
+function refreshStreakDisplay(){ var n=currentStreak(); var t='\uD83D\uDD25 '+n+(n===1?' day':' days');
+  var hd=document.getElementById('hdr-streak'); if(hd) hd.textContent=t;
+  var sc=document.getElementById('streak-count'); if(sc) sc.textContent=n; }
+function bumpStreak(){ try{ var today=_streakToday(); var s=getStreakData(); var d=(s&&s.lastDate)?_streakDiff(s.lastDate,today):null;
+  if(d===0){ /* already counted today */ }
+  else if(d===1){ localStorage.setItem(_streakKey(),JSON.stringify({count:(s.count||0)+1,lastDate:today})); }
+  else { localStorage.setItem(_streakKey(),JSON.stringify({count:1,lastDate:today})); }
+  refreshStreakDisplay();
+}catch(e){} }
+
 function submitAnswer() {
   if (answered || !selectedLetter) return;
   answered = true;
+  if(typeof bumpStreak==='function') bumpStreak();
   const q = examQs[examIdx];
   const correctLetter = q._shuffledCorrect || q.correct;
   const correct = selectedLetter === correctLetter;
@@ -5700,6 +5779,7 @@ function showGamesHome() {
 // Fire-and-forget; never blocks the UI. Games carry no score, so total:0 keeps
 // them out of exam-average and quiz/exam metrics.
 function logGamePlay(id) {
+  if(typeof bumpStreak==='function') bumpStreak();
   try {
     if (!user || typeof SB === 'undefined' || !SB) return;
     var nm = (typeof GAME_NAMES !== 'undefined' && GAME_NAMES[id]) ||
@@ -8706,16 +8786,7 @@ function hotNext(){
 // ── Streak update when a game is completed ───────────────────────────────────
 function updateGameStreak() {
   if (!profile) return;
-  const today = new Date().toDateString();
-  const lastStudy = localStorage.getItem('lastStudyDate_'+user?.id);
-  if (lastStudy !== today) {
-    localStorage.setItem('lastStudyDate_'+user?.id, today);
-    if (profile) {
-      profile.streak = (profile.streak||0) + 1;
-      const streakEl = document.getElementById('streak-count');
-      if (streakEl) streakEl.textContent = profile.streak;
-    }
-  }
+  if (typeof bumpStreak === 'function') bumpStreak();
 }
 
 // ── Init games when view is shown ────────────────────────────────────────────
